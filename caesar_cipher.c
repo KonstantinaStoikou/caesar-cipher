@@ -1,4 +1,3 @@
-/*File: exam1_sdi1500151.c */
 #include <stdio.h>
 
 int main(void){
