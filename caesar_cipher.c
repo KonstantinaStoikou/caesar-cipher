@@ -1,156 +1,67 @@
 #include <stdio.h>
 
-int main(void){
-	int num,pos=0,flag,crypt,th,ch,npos;
-	crypt = getchar();                           //e for encryption, d for decryption
-	while ((num = getchar()) != '\n'){
-		pos = pos * 10 + num - '0';
-	}
-	if (crypt == 'e'){                           //encryption
-		while((ch = getchar()) != EOF){
-			if (ch <= '9' && ch >= '0')
-				flag = 1;
-			else if (ch >= 'A' && ch <= 'Z')
-				flag = 2;
-			else if (ch >= 'a' && ch <= 'z')
-				flag = 3;
-			else
-				flag = 0;
-			th = ch + pos;
-			if ((th <= '9' && th >= '0' && flag == 1) || (th >= 'A' && th <= 'Z' && flag == 2) || (th >= 'a' && th <= 'z' && flag == 3))
-				putchar(th);
-			else if (flag == 1){
-				if (pos >= 10){
-					npos = pos % 10;
-					th = ch + npos;
-					if (th > '9'){
-						npos = npos - '9' + ch;
-						th = '0' - 1 + npos;
-						putchar(th);
-					}
-					else
-						putchar(th);
-				}
-				else{
-					npos = pos - '9' + ch;
-					th = '0' - 1 + npos;
-					putchar(th);
-				}
-			}
-			else if (flag == 2){
-				if (pos >= 26){
-					npos = pos % 26;
-					th = ch + npos;
-					if (th > 'Z'){
-						npos = npos - 'Z' + ch;
-						th = 'A' - 1 + npos;
-						putchar(th);
-					}
-					else
-						putchar(th);
-				}
-				else{
-					npos = pos - 'Z' + ch;
-					th = 'A' - 1 + npos;
-					putchar(th);
-				}
-			}
-			else if (flag == 3){
-				if (pos >= 26){
-					npos = pos % 26;
-					th = ch + npos;
-					if (th > 'z'){
-						npos = npos - 'z' + ch;
-						th = 'a' - 1 + npos;
-						putchar(th);
-					}
-					else
-						putchar(th);
-				}
-				else{
-					npos = pos - 'z' + ch;
-					th = 'a' - 1 + npos;
-					putchar(th);
-				}
-			}
-			else if (ch != '\n')                    //if ch is a symbol
-				putchar(ch);
-			else
-				printf("\n");
-		}
-	}
-	else{                                           //decryption
-		while((ch = getchar()) != EOF){
-			if (ch <= '9' && ch >= '0')
-				flag = 1;
-			else if (ch >= 'A' && ch <= 'Z')
-				flag = 2;
-			else if (ch >= 'a' && ch <= 'z')
-				flag = 3;
-			else
-				flag = 0;
-			th = ch - pos;
-			if ((th <= '9' && th >= '0' && flag == 1) || (th >= 'A' && th <= 'Z' && flag == 2) || (th >= 'a' && th <= 'z' && flag == 3))
-				putchar(th);
-			else if (flag == 1){
-				if (pos >= 10){
-					npos = pos % 10;
-					th = ch - npos;
-					if (th < '0'){
-						npos = npos - ch + '0';
-						th = '9' - npos;
-						putchar(th);
-					}
-					else
-						putchar(th);
-				}
-				else{
-					npos = pos - ch + '0';
-					th = '9' - npos;
-					putchar(th);
-				}
-			}
-			else if (flag == 2){
-				if (pos >= 26){
-					npos = pos % 26;
-					th = ch - npos;
-					if (th < 'A'){
-						npos = npos - ch + 'A';
-						th = 'Z' - npos;
-						putchar(th);
-					}
-					else
-						putchar(th);
-				}
-				else{
-					npos = pos - ch + 'A';
-					th = 'Z' - npos;
-					putchar(th);
-				}
-			}
-			else if (flag == 3){
-				if (pos >= 26){
-					npos = pos % 26;
-					th = ch - npos;
-					if (th < 'a'){
-						npos = npos - ch + 'a';
-						th = 'z' - npos;
-						putchar(th);
-					}
-					else
-						putchar(th);
-				}
-				else{
-					npos = pos - ch + 'a';
-					th = 'z' - npos;
-					putchar(th);
-				}
-			}
-			else if (ch != '\n')
-				putchar(ch);
-			else
-				printf("\n");
-		}
-	}
-	return 0;
+// encrypt a character by moving it 'shift' positions to right in the same ascii
+// 'zone' (A-Z or a-z or 0-9)
+int encrypt_char(int ch, int start, int end, int shift) {
+    // range of the ascii zone that character is allowed to be shifted in
+    int range = end - start + 1;
+    int new_ch = ch + shift % range;
+    // if new character is out of the zone, shift it from the start of the zone
+    // by the number of positions that were over the zone
+    int extra = new_ch - end;
+    if (extra > 0) {
+        new_ch = start - 1 + extra;
+    }
+    return new_ch;
+}
+
+// decrypt a character by moving it 'shift' positions to the left in the same
+// ascii 'zone' (A-Z or a-z or 0-9)
+int decrypt_char(int ch, int start, int end, int shift) {
+    // range of the ascii zone that character is allowed to be shifted in
+    int range = end - start + 1;
+    int new_ch = ch - shift % range;
+    // if new character is out of the zone, shift it from the end of the zone
+    // by the number of positions that were under the zone
+    int extra = end - new_ch;
+    if (extra > 0) {
+        new_ch = end + 1 - extra;
+    }
+}
+
+// based on the ascii zone of the character, call function (encrypt_char,
+// decrypt_char)
+void call_function_by_zone(int ch, int shift, int (*f)(int, int, int, int)) {
+    if (ch <= '9' && ch >= '0') {
+        putchar((*f)(ch, '0', '9', shift));
+    } else if (ch <= 'Z' && ch >= 'A') {
+        putchar((*f)(ch, 'A', 'Z', shift));
+    } else if (ch <= 'z' && ch >= 'a') {
+        putchar((*f)(ch, 'a', 'z', shift));
+    } else if (ch != '\n')  // if ch is a symbol
+        putchar(ch);
+    else
+        printf("\n");
+}
+
+int main(void) {
+    int num, shift = 0, flag, new_ch, ch, npos;
+    // e for encryption, d for decryption
+    int crypt = getchar();
+    // get number of positions for every letter to be right shifted
+    while ((num = getchar()) != '\n') {
+        shift = shift * 10 + num - '0';
+    }
+    if (crypt == 'e') {  // encryption
+        while ((ch = getchar()) != EOF) {
+            call_function_by_zone(ch, shift, encrypt_char);
+        }
+    } else if (crypt == 'd') {  // decryption
+        while ((ch = getchar()) != EOF) {
+            call_function_by_zone(ch, shift, decrypt_char);
+        }
+    } else {
+        printf("Wrong format.");
+    }
+    return 0;
 }
