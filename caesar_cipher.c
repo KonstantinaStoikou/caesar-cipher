@@ -23,10 +23,11 @@ int decrypt_char(int ch, int start, int end, int shift) {
     int new_ch = ch - shift % range;
     // if new character is out of the zone, shift it from the end of the zone
     // by the number of positions that were under the zone
-    int extra = end - new_ch;
+    int extra = start - new_ch;
     if (extra > 0) {
         new_ch = end + 1 - extra;
     }
+    return new_ch;
 }
 
 // based on the ascii zone of the character, call function (encrypt_char,
@@ -61,7 +62,7 @@ int main(void) {
             call_function_by_zone(ch, shift, decrypt_char);
         }
     } else {
-        printf("Wrong format.");
+        printf("Wrong input format.\n");
     }
     return 0;
 }
